@@ -32,7 +32,6 @@ class chunk{
                 }
             }
         }
-        //console.log(this.list);
 
 
     }
@@ -223,7 +222,7 @@ class chunk{
         for(let x = 0; x < this.SIZE; x++){
             for(let y = 0; y < this.HEIGHT; y++){
                 for(let z = 0; z < this.SIZE; z++){
-                    this.list[x][y][z].type = Math.floor(Math.random() * 8);
+                    this.list[x][y][z].type = Math.floor(Math.random() * 2);
                 }
             }
         }
@@ -358,8 +357,106 @@ class chunk{
     }
 
 
-    greedyMesh(){
-    
+    //Generates the entire greedy mesh and sends to three.js
+    generateGreedyMesh(){
+        let layerX;
+        let layerY;
+        let layerZ;
+        let meshData;
+
+        for(let i = 0; i < this.SIZE; i++){
+            layerX = this.getXLayer(i);
+            layerY = this.getYLayer(i);
+            layerZ = this.getZLayer(i);
+
+            //left (x-) mesh data
+            meshData = this.greedyMesh(layerX, 1);
+
+            //sending all the data to three.js
+            for(let j = 0; j < meshData.length; j++){
+                this.sendPlaneTest(i, meshData[j].y, meshData[j].x, meshData[j].width, meshData[j].height, meshData[j].type, 1);
+            }
+
+
+            //right (x+) mesh data
+            meshData = this.greedyMesh(layerX, 3);
+
+            //sending all the data to three.js
+            for(let j = 0; j < meshData.length; j++){
+                this.sendPlaneTest(i, meshData[j].y, meshData[j].x, meshData[j].width, meshData[j].height, meshData[j].type, 3);
+            }
+
+
+            //top (y+) mesh data
+            meshData = this.greedyMesh(layerY, 4);
+
+            //sending all the data to three.js
+            for(let j = 0; j < meshData.length; j++){
+                this.sendPlaneTest(meshData[j].x, i, meshData[j].y, meshData[j].width, meshData[j].height, meshData[j].type, 4);
+            }
+
+
+            //bottom (y-) mesh data
+            meshData = this.greedyMesh(layerY, 5);
+
+            //sending all the data to three.js
+            for(let j = 0; j < meshData.length; j++){
+                this.sendPlaneTest(meshData[j].x, i, meshData[j].y, meshData[j].width, meshData[j].height, meshData[j].type, 5);
+            }
+
+
+            //back (z-) mesh data
+            meshData = this.greedyMesh(layerZ, 0);
+
+            //sending all the data to three.js
+            for(let j = 0; j < meshData.length; j++){
+                this.sendPlaneTest(meshData[j].x, meshData[j].y, i, meshData[j].width, meshData[j].height, meshData[j].type, 0);
+            }
+
+
+            //front (z+) mesh data
+            meshData = this.greedyMesh(layerZ, 2);
+
+            //sending all the data to three.js
+            for(let j = 0; j < meshData.length; j++){
+                this.sendPlaneTest(meshData[j].x, meshData[j].y, i, meshData[j].width, meshData[j].height, meshData[j].type, 2);
+            }
+
+        }
+
+    }
+
+
+    /*
+    * Returns a greedy mesh of one layer of blocks
+    * Takes a reference to a 2D array representing a chunk layer
+    * Takes an integer representing what block side to look at
+    * Returns: An array of objects representing a rectangle with these properties:
+    *           - x, y (relative coordinates)
+    *           - type (block id)
+    *           - width, height
+    *           - rx, ry, rz (x, y, and z rotation)
+    */
+    greedyMesh(layerReference, side){
+        let lengthData = [];
+        let tempData;
+
+        //get each piece of length data for each slice of the layer
+        for(let i = 0; i < layerReference.length; i++){
+
+            do{
+                tempData = this.getLength(layerReference, side, i);
+                //dont use data that doesnt help us
+                if(tempData.length > 0){
+                    lengthData[lengthData.length] = tempData;
+                    this.markStripUsed(layerReference, side, i, tempData.start, tempData.end);
+                }
+            } while(tempData.length > 0);
+
+        }
+
+        return this.getWidth(lengthData);
+
     }
 
 
@@ -387,6 +484,7 @@ class chunk{
     * Returns: A single object with these properties
     *           - start, end (both single integers)
     *           - length
+    *           - type (block id)
     *           - index (same as index parameter, used for getWidth)
     *           - used (boolean, later used for getWidth to mark what pieces of data have been used already)
     * length = 0 if there aren't any unused/visible blocks
@@ -404,11 +502,11 @@ class chunk{
             //if target block id has not been found and the selected block is visible
             if(targetID === -1 && block.sides[side]){
                 //set the target block id to the current selected block
-                targetID = block.id;
+                targetID = block.type;
                 start = i;
             }
 
-            if(targetID !== -1 && block.id === targetID && block.sides[side]){
+            if(targetID !== -1 && block.type === targetID && block.sides[side]){
                 length++;
             } else if(targetID !== -1){
                 end = i - 1;
@@ -423,6 +521,7 @@ class chunk{
             "end": end,
             "length": length,
             "index": index,
+            "type": targetID,
             "used" : false
         }
 
@@ -434,9 +533,9 @@ class chunk{
     * Takes an array of length data from getLength
     * Data should be sorted from lowest index to highest (see getLength returning object)
     * Returns: An array of objects with these properties
-    *           - Width, height
-    *           - x, y position
-    *           - Block ID
+    *           - width, height
+    *           - x, y
+    *           - type (block id)
     */
     getWidth(lengthData){
         let result = [];
@@ -453,7 +552,7 @@ class chunk{
             //j loop
             for(let j = i; j < lengthData.length; j++){
                 //continue if used already or if index value is lower than what we want or if differing block types are used
-                if(lengthData[j].used || lengthData[j].index < currentIndex + 1 || lengthData[i].id !== lengthData[j].id){
+                if(lengthData[j].used || lengthData[j].index < currentIndex + 1 || lengthData[i].type !== lengthData[j].type){
                     continue;
                 }
 
@@ -475,11 +574,11 @@ class chunk{
             //j loop
 
             result[result.length] = {
-                "x": i,
+                "x": lengthData[i].index,
                 "y": lengthData[i].start,
                 "width": currentWidth,
-                "height": lengthData[i].height,
-                "id": lengthData[i].id
+                "height": lengthData[i].length,
+                "type": lengthData[i].type
             };
 
             //reset for next loop iteration
@@ -488,19 +587,6 @@ class chunk{
         }
 
         return result;
-    }
-
-    test(){
-        let test = this.getBlock(0, 0, 0);
-        console.log(test);
-        test.type = 3;
-        console.log(this.getBlock(0, 0, 0));
-    }
-
-    markTest(){
-        for(let i = 0; i < this.SIZE; i++){
-            this.sendPlane(i, -1, 0, 1, 1, 4, 3, true);
-        }
     }
 
 
@@ -528,7 +614,7 @@ class chunk{
             material = new THREE.MeshBasicMaterial( { color: faces[face].color, transparent: true, opacity: blocks.list[id].opacity/*, side: THREE.DoubleSide */} );
         }
         if(test != null && test){
-            material = new THREE.MeshBasicMaterial( { color: Math.random() * 500, side: THREE.DoubleSide} );
+            material = new THREE.MeshBasicMaterial( { color: Math.random() * 1000, side: THREE.DoubleSide} );
         }
         
 
@@ -547,6 +633,62 @@ class chunk{
         material.dispose();
         //console.log(scene.children.length);
     }
+
+
+    sendPlaneTest(x, y, z, width, height, id, face){
+        let faces = blocks.list[id].faces;
+        let geometry;
+        let material;
+        let worldCoord;
+        let chunkOffset;
+        let plane;
+
+        //gets coordinate position of current block
+        chunkOffset = new THREE.Vector3(this.x * this.SIZE * blocks.BLOCK_SIZE, this.y * this.SIZE * blocks.BLOCK_SIZE, this.z * this.SIZE * blocks.BLOCK_SIZE);
+        worldCoord = new THREE.Vector3(x * blocks.BLOCK_SIZE, y * blocks.BLOCK_SIZE, z * blocks.BLOCK_SIZE);
+
+        worldCoord.x += faces[face].x + chunkOffset.x;
+        worldCoord.y += faces[face].y + chunkOffset.y;
+        worldCoord.z += faces[face].z + chunkOffset.z;
+
+        if(face === 3 || face === 1){
+            worldCoord.y += ((height - 1) * blocks.BLOCK_SIZE) / 2;
+            worldCoord.z += ((width - 1) * blocks.BLOCK_SIZE) / 2;
+        } 
+        else if(face === 0 || face === 2){
+            worldCoord.x += ((width - 1) * blocks.BLOCK_SIZE) / 2;
+            worldCoord.y += ((height - 1) * blocks.BLOCK_SIZE) / 2;
+        }
+        else if(face === 4 || face === 5){
+            worldCoord.x += ((width - 1) * blocks.BLOCK_SIZE) / 2;
+            worldCoord.z += ((height - 1) * blocks.BLOCK_SIZE) / 2;
+        }
+
+        geometry = new THREE.PlaneGeometry( width * blocks.BLOCK_SIZE, height * blocks.BLOCK_SIZE );
+
+        if(blocks.list[id].opacity === 1){
+            material = new THREE.MeshBasicMaterial( { color: faces[face].color/*, side: THREE.DoubleSide */} );
+        }else{
+            material = new THREE.MeshBasicMaterial( { color: faces[face].color, transparent: true, opacity: blocks.list[id].opacity/*, side: THREE.DoubleSide */} );
+        }
+        //material = new THREE.MeshBasicMaterial( { color: Math.random() * 1000, side: THREE.DoubleSide} );
+
+        //rotates the face to the proper direction
+        geometry.rotateX(faces[face].rx);
+        geometry.rotateY(faces[face].ry);
+        geometry.rotateZ(faces[face].rz);
+
+        geometry.translate(worldCoord.x, worldCoord.y, worldCoord.z);
+        
+        plane = new THREE.Mesh( geometry, material );
+        plane.name = this.chunkID;
+
+        this.scene.add(plane);
+        geometry.dispose();
+        material.dispose();
+
+    }
+
 
     removeAllFromScene(){//removes this entire chunk from the scene
         let selectedObject = this.scene.getObjectByName(this.chunkID);

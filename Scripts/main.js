@@ -34,26 +34,40 @@ plane.position.x = 5;
 
 let testChunk = new chunk(1, 0, 0, scene);
 let x = new Array(testChunk.SIZE).fill(new Array(testChunk.HEIGHT).fill(0));
-testChunk.genFill(1);
-//testChunk.genRandomBlocks();
+//testChunk.genFill(1);
+testChunk.genRandomBlocks();
 testChunk.visibleSides(x, x, x, x, x, x);
-testChunk.markStripUsed(testChunk.getXLayer(0), 3, 1, 0, 3);
-testChunk.setRaw();
+
+//test(testChunk.getXLayer(0), 3);
+//test(testChunk.getXLayer(15), 1);
+//test(testChunk.getYLayer(0), 5);
+//test(testChunk.getYLayer(15), 4);
+//test(testChunk.getZLayer(0), 2);
+//test(testChunk.getZLayer(15), 0);
+
+//testChunk.getBlock(0, 15, 0).sides[4] = false;
+//console.log(testChunk.getYLayer(15));
+
+function test(layer, side){
+    testChunk.markStripUsed(layer, side, 1, 0, 3);
+    testChunk.markStripUsed(layer, side, 0, 5, 5);
+    testChunk.markStripUsed(layer, side, 1, 5, 5);
+    testChunk.markStripUsed(layer, side, 2, 5, 5);
+    testChunk.markStripUsed(layer, side, 5, 6, 15);
+    testChunk.markStripUsed(layer, side, 10, 5, 5);
+    testChunk.markStripUsed(layer, side, 11, 4, 4);
+}
+
+
+
+//testChunk.setRaw();
 
 let lastUpdate = Date.now();
 
 let p = new player(camera, 0, 0, 0);
 setInterval(animate, 1000/60);
 
-//testChunk.greedyMesh();
-testChunk.sendPlane(0, 0, 0, 1, 1, 1, 4);
-testChunk.sendPlane(0, 1, 0, 1, 1, 7, 4);
-testChunk.sendPlane(0, 1, 0, 1, 1, 7, 1);
-testChunk.sendPlane(0, 1, 0, 1, 1, 7, 0);
-//console.log(testChunk.getBlock(0, 0, 0));
-
-console.log(testChunk.getLength(testChunk.getXLayer(0), 3, 1));
-testChunk.markTest();
+testChunk.generateGreedyMesh();
 
 function animate() {
 
