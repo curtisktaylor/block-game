@@ -187,3 +187,27 @@ document.addEventListener("keyup", function(event){
         p.moveV = 0;
     }
 });
+
+//lock and hide cursor onto screen when window is clicked
+document.addEventListener("mousedown", function(){
+    canvas.requestPointerLock = canvas.requestPointerLock ||canvas.mozRequestPointerLock;
+
+    canvas.requestPointerLock()
+});
+
+document.addEventListener('pointerlockchange', lockChangeAlert, false);
+document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+
+function lockChangeAlert() {
+    if (document.pointerLockElement === canvas || document.mozPointerLockElement === canvas) {
+      document.addEventListener("mousemove", updateMouse, false);
+    } else {
+      document.removeEventListener("mousemove", updateMouse, false);
+    }
+  }
+  
+
+function updateMouse(m){
+    p.cameraX += m.movementX * p.cameraSensitivity;
+    p.cameraY -= m.movementY * p.cameraSensitivity;
+}

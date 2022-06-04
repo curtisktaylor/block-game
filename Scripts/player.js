@@ -24,6 +24,7 @@ class player{
 
         this.cameraX = 0;//horizontal camera rotation
         this.cameraY = 0;//vertical
+        this.cameraSensitivity = 0.2;
 
         this.turnX = 0;//what direction player is turning on horizontal axis (-1 = left, 1 = right, 0 = none)
         this.turnY = 0;//same but on vertical axis                           (-1 down, 1, up, 0, none)
