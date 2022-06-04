@@ -32,11 +32,11 @@ for(let i = 0; i < text.length; i++){
 plane.position.z = 5;
 plane.position.x = 5;
 
-let testChunk = new chunk(1, 0, 0, scene);
-let x = new Array(testChunk.SIZE).fill(new Array(testChunk.HEIGHT).fill(0));
+//let testChunk = new chunk(1, 0, 0, scene);
+//let x = new Array(testChunk.SIZE).fill(new Array(testChunk.HEIGHT).fill(0));
 //testChunk.genFill(1);
-testChunk.genRandomBlocks();
-testChunk.visibleSides(x, x, x, x, x, x);
+//testChunk.genRandomBlocks();
+//testChunk.visibleSides(x, x, x, x, x, x);
 
 //test(testChunk.getXLayer(0), 3);
 //test(testChunk.getXLayer(15), 1);
@@ -59,6 +59,11 @@ function test(layer, side){
 }
 
 
+let world = new chunkManager(4, 6, 4, scene);
+world.applyNoiseMap2();
+world.generateAllGreedyMeshes();
+
+
 
 //testChunk.setRaw();
 
@@ -67,7 +72,7 @@ let lastUpdate = Date.now();
 let p = new player(camera, 0, 0, 0);
 setInterval(animate, 1000/60);
 
-testChunk.generateGreedyMesh();
+//testChunk.generateGreedyMesh();
 
 function animate() {
 

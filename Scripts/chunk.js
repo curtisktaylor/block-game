@@ -147,11 +147,13 @@ class chunk{
     }
 
     getXP(){//gets the blocks lining positive x border of this chunk, returns their IDs in an array
-        let XP = new Array(this.SIZE * this.HEIGHT);
+        let XP = new Array(this.SIZE);
 
         for(let z = 0; z < this.SIZE; z++){
+            XP[z] = new Array(this.HEIGHT);
+
              for(let y = 0; y < this.HEIGHT; y++){
-                XP[z][y] = this.getBlockID(this.SIZE - 1, y, z);
+                XP[z][y] = this.getBlockID(0, y, z);
             }
          }
 
@@ -159,11 +161,13 @@ class chunk{
     }
 
     getXN(){//gets the blocks lining negative x border of this chunk, returns their IDs in an array
-        let XN = new Array(this.SIZE * this.HEIGHT);
+        let XN = new Array(this.SIZE);
 
         for(let z = 0; z < this.SIZE; z++){
+            XN[z] = new Array(this.HEIGHT);
+
              for(let y = 0; y < this.HEIGHT; y++){
-                XN[z][y] = this.getBlockID(0, y, z);
+                XN[z][y] = this.getBlockID(this.SIZE - 1, y, z);
             }
          }
          
@@ -171,11 +175,13 @@ class chunk{
     }
 
     getZP(){//gets the blocks lining positive z border of this chunk, returns their IDs in an array
-        let ZP = new Array(this.SIZE * this.HEIGHT);
+        let ZP = new Array(this.SIZE);
 
         for(let x = 0; x < this.SIZE; x++){
+            ZP[x] = new Array(this.HEIGHT);
+
              for(let y = 0; y < this.HEIGHT; y++){
-                ZP[x][y] = this.getBlockID(x, y, this.SIZE - 1);
+                ZP[x][y] = this.getBlockID(x, y, 0);
             }
          }
          
@@ -183,11 +189,13 @@ class chunk{
     }
 
     getZN(){//gets the blocks lining negative z border of this chunk, returns their IDs in an array
-        let ZN = new Array(this.SIZE * this.HEIGHT);
+        let ZN = new Array(this.SIZE);
 
         for(let x = 0; x < this.SIZE; x++){
+            ZN[x] = new Array(this.HEIGHT);
+
              for(let y = 0; y < this.HEIGHT; y++){
-                ZN[x][y] = this.getBlockID(x, y, 0);
+                ZN[x][y] = this.getBlockID(x, y, this.SIZE - 1);
             }
          }
          
@@ -195,11 +203,13 @@ class chunk{
     }
 
     getYP(){//gets the blocks lining positive y border of this chunk, returns their IDs in an array
-        let YP = new Array(this.SIZE * this.SIZE);
+        let YP = new Array(this.SIZE);
 
         for(let x = 0; x < this.SIZE; x++){
+            YP[x] = new Array(this.SIZE);
+
              for(let z = 0; z < this.SIZE; z++){
-                YP[x][z] = this.getBlockID(x, this.HEIGHT - 1, z);
+                YP[x][z] = this.getBlockID(x, 0, z);
             }
          }
          
@@ -207,11 +217,13 @@ class chunk{
     }
 
     getYN(){//gets the blocks lining negative y border of this chunk, returns their IDs in an array
-        let YN = new Array(this.SIZE * this.SIZE);
+        let YN = new Array(this.SIZE);
 
         for(let x = 0; x < this.SIZE; x++){
+            YN[x] = new Array(this.SIZE);
+
              for(let z = 0; z < this.SIZE; z++){
-                YN[x][z] = this.getBlockID(x, 0, z);
+                YN[x][z] = this.getBlockID(x, this.HEIGHT - 1, z);
             }
          }
          
@@ -235,6 +247,20 @@ class chunk{
                     this.list[x][y][z].type = type;
                 }
             }
+        }
+    }
+
+    fillColumn(x, z, height, type){
+        let h = height;
+
+        if(h > this.HEIGHT){
+            h = this.HEIGHT;
+        } else if(h < 1){
+            return;
+        }
+
+        for(let y = 0; y < h; y++){
+            this.list[x][y][z].type = type;
         }
     }
 

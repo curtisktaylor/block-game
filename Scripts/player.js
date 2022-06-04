@@ -33,7 +33,7 @@ class player{
         this.moveV = 0;//if player is moving up/down
 
 
-        this.speed = 1;//player's speed
+        this.speed = 2;//player's speed
         this.sens = 3;//how fast camera rotates
 
 
