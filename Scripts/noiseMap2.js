@@ -9,6 +9,10 @@ class noiseMap2{
 
         this.map = [];
 
+        for(let x = 0; x < this.WIDTH * this.SIZE; x++){
+            this.map[x] = new Array(this.LENGTH);
+        }
+
     }
 
 
@@ -17,8 +21,7 @@ class noiseMap2{
 
         //generate initial values
         for(let x = 0; x < this.WIDTH * this.SIZE; x++){
-            this.map[x] = new Array(this.LENGTH);
-
+            
             for(let z = 0; z < this.LENGTH * this.SIZE; z++){
                 this.map[x][z] = Math.round(Math.random() * (this.HEIGHT * this.SIZE));
             }
@@ -66,7 +69,7 @@ class noiseMap2{
                     sum += samples[i];
                 }
 
-                newMap[x][z] = Math.floor(sum / samples.length);
+                newMap[x][z] = Math.round(sum / samples.length);
                 sum = 0;
                 samples = [];
 

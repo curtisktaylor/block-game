@@ -3,16 +3,18 @@ let yCoord = document.getElementById("y");
 let zCoord = document.getElementById("z");
 let currentChunk = document.getElementById("chunk");
 let canvas = document.getElementById("canvas");
+let fpsCounter = document.getElementById("fps");
 
 let width = window.innerWidth;
 let height = window.innerHeight;
 
 let scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0xadd8e6, 0.004);
+//scene.fog = new THREE.FogExp2(0xadd8e6, 0.004);
 scene.background = new THREE.Color(0xadd8e6);
 let camera = new THREE.PerspectiveCamera( 80, width / height, 0.1, 1000 );
 
 let renderer = new THREE.WebGLRenderer({antialias: false, canvas: canvas});
+renderer.setPixelRatio( window.devicePixelRatio * (3/4) );
 renderer.setSize( width, height );
 
 
@@ -32,21 +34,6 @@ for(let i = 0; i < text.length; i++){
 plane.position.z = 5;
 plane.position.x = 5;
 
-//let testChunk = new chunk(1, 0, 0, scene);
-//let x = new Array(testChunk.SIZE).fill(new Array(testChunk.HEIGHT).fill(0));
-//testChunk.genFill(1);
-//testChunk.genRandomBlocks();
-//testChunk.visibleSides(x, x, x, x, x, x);
-
-//test(testChunk.getXLayer(0), 3);
-//test(testChunk.getXLayer(15), 1);
-//test(testChunk.getYLayer(0), 5);
-//test(testChunk.getYLayer(15), 4);
-//test(testChunk.getZLayer(0), 2);
-//test(testChunk.getZLayer(15), 0);
-
-//testChunk.getBlock(0, 15, 0).sides[4] = false;
-//console.log(testChunk.getYLayer(15));
 
 function test(layer, side){
     testChunk.markStripUsed(layer, side, 1, 0, 3);
@@ -59,8 +46,10 @@ function test(layer, side){
 }
 
 
-let world = new chunkManager(4, 6, 4, scene);
+let world = new chunkManager(5, 8, 5, scene);
 world.applyNoiseMap2();
+world.applyDefaultGeneration();
+world.generateTrees(0.02);
 world.generateAllGreedyMeshes();
 
 
@@ -69,30 +58,52 @@ world.generateAllGreedyMeshes();
 
 let lastUpdate = Date.now();
 
-let p = new player(camera, 0, 0, 0);
-setInterval(animate, 1000/60);
+let p = new player(camera, 0, 5 * 16 * 8, 0);
+//setInterval(animate, 1000/60);
+requestAnimationFrame(animate);
+//setInterval(updateFps, 1000);
 
 //testChunk.generateGreedyMesh();
 
+let fps = 0;
+let now;
+let deltaTime;
+let lastSecond = Date.now();
+
 function animate() {
 
-    let now = Date.now();
-    let deltaTime = (now - lastUpdate) / (1000/60);
+    //setup for deltatime and fps counter stuff
+    now = Date.now();
+    deltaTime = (now - lastUpdate) / (1000/60);
     lastUpdate = now;
 
-    //chunk.innerHTML = "Chunk: " + p.chunk;
+    //update fps counter if 1 second has passed
+    if(now - lastSecond> 1000){
+        fpsCounter.innerHTML = "FPS: " + fps;
+        fps = 0;
+        lastSecond = now;
+    }
 
-    document.getElementById("fps").innerHTML = "FPS: " + Math.floor(60 / deltaTime);
+    //counting how many frames were drawn this second
+    fps++;
+
 
     xCoord.innerHTML = "X: " + Math.round(camera.position.x)/5;
     yCoord.innerHTML = "Y: " + Math.round(camera.position.y)/5;
     zCoord.innerHTML = "Z: " + Math.round(camera.position.z)/5;
 
-    //requestAnimationFrame( animate );
+    //move player
+    p.updateMove(camera, deltaTime);
+
+    //draw frame
     renderer.render( scene, camera );
     
-    p.updateMove(camera, deltaTime);
-    
+    requestAnimationFrame(animate);
+}
+
+function updateFps(){
+    document.getElementById("fps").innerHTML = "FPS: " + fps;
+    fps = 0;
 }
 
 

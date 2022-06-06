@@ -264,6 +264,34 @@ class chunk{
         }
     }
 
+    getHighestBlockIndex(x, z){
+        let h = 0;
+
+        //increase h until air is found or until top of chunk is reached
+        for(let y = 0; y < this.HEIGHT; y++){
+            if(this.list[x][y][z].type === 0){
+                break;
+            }
+            h++;
+        }
+
+        return h;
+    }
+
+    getHighestBlockType(x, z){
+        let type = 0;
+
+        //increase h until air is found or until top of chunk is reached
+        for(let y = 0; y < this.HEIGHT; y++){
+            if(this.list[x][y][z].type === 0){
+                return type;
+            }
+            type = this.list[x][y][z].type;
+        }
+
+        return type;
+    }
+
     setRaw(){//adds chunk mesh into scene without greedy meshing
 
         let id;
