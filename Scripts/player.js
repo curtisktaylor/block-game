@@ -1,8 +1,20 @@
 class player{
 
-    constructor(camera, x, y, z){
+    constructor(scene, camera, x, y, z, worldSizeX, worldSizeY, worldSizeZ, chunkSize, chunkHeight){
+
+        this.visibleChunks = [];
+
+        this.renderDist = 3;
 
         this.camera = camera;
+        this.SCENE = scene;
+
+        this.chunkSize = chunkSize;
+        this.chunkHeight = chunkHeight;
+
+        this.worldSizeX = worldSizeX;
+        this.worldSizeY = worldSizeY;
+        this.worldSizeZ = worldSizeZ;
 
 
         this.trueX = x;//the true coordinates of the player in the scene
@@ -12,6 +24,10 @@ class player{
         this.worldX = x / 5;//coordinates of player in the world
         this.worldY = y / 5;
         this.worldZ = z / 5;
+
+        this.chunkX = Math.floor(this.worldX / 16);//what chunk the player is in
+        this.chunkY = Math.floor(this.worldY / 16);
+        this.chunkZ = Math.floor(this.worldZ / 16);
 
         this.fX = Math.floor(x / 5);//floored world coordinates
         this.fY = Math.floor(y / 5);
@@ -38,6 +54,92 @@ class player{
         this.sens = 3;//how fast camera rotates
 
 
+        this.world = new chunkManager(worldSizeX, worldSizeY, worldSizeZ, scene);
+        this.initWorld();
+
+
+    }
+
+    initWorld(){
+        this.world.applyNoiseMap2();
+        this.world.applyDefaultGeneration();
+        this.world.generateTrees(0.02);
+        //this.world.generateAllGreedyMeshes();
+    }
+
+    updateRenderedChunks(){
+        let newChunks = [];
+
+        //figure out what chunks are now visible
+        for(let x = this.chunkX - this.renderDist; x < this.chunkX + this.renderDist + 1; x++){
+            for(let y = 0; y < this.worldSizeY; y++){
+                for(let z = this.chunkZ - this.renderDist; z < this.chunkZ + this.renderDist + 1; z++){
+
+                    newChunks[newChunks.length] = new THREE.Vector3(x, y, z);
+                }
+            }
+        }
+
+        if(this.visibleChunks.length === 0){
+            this.visibleChunks = newChunks;
+            for(let i = 0; i < newChunks.length; i++){
+                this.world.showChunk(newChunks[i].x, newChunks[i].y, newChunks[i].z);
+            }
+        }
+
+        let matching = false;
+        let targetChunk;
+        let newChunk;
+
+        //if a chunk that is currently visible shouldn't be because the player moved to a new chunk, make it invisible
+        for(let i = 0; i < this.visibleChunks.length; i++){
+            for(let j = 0; j < newChunks.length; j++){
+
+                targetChunk = this.visibleChunks[i];
+                newChunk = newChunks[j];
+
+                if(targetChunk.x === newChunk.x && targetChunk.y === newChunk.y && targetChunk.z === newChunk.z){
+                    matching = true;
+                    break;
+                }
+            }
+
+            if(matching){
+                matching = false;
+                continue;
+            }
+
+            this.world.hideChunk(targetChunk.x, targetChunk.y, targetChunk.z);
+        }
+
+        //look through each new chunk
+        for(let i = 0; i < newChunks.length; i++){
+            for(let j = 0; j < this.visibleChunks.length; j++){
+
+                targetChunk = this.visibleChunks[j];
+                newChunk = newChunks[i];
+
+
+                if(targetChunk.x === newChunk.x && targetChunk.y === newChunk.y && targetChunk.z === newChunk.z){
+                    matching = true;
+                    break;
+                }
+            }
+
+            //if the new chunk matches with an old one, do nothing because it should already be visible
+            if(matching){
+                matching = false;
+                continue;
+            } 
+
+            //otherwise, make the chunk visible
+            this.world.showChunk(newChunk.x, newChunk.y, newChunk.z);
+            //console.log(newChunk);
+
+        }
+
+        this.visibleChunks = newChunks;
+
     }
 
     setPos(x, y, z){//input true coordinates, updates other position variables
@@ -53,6 +155,10 @@ class player{
         this.fX = Math.floor(x / 5);//floored world coordinates
         this.fY = Math.floor(y / 5);
         this.fZ = Math.floor(z / 5);
+
+        this.chunkX = Math.floor(this.worldX / 16);//what chunk the player is in
+        this.chunkY = Math.floor(this.worldY / 16);
+        this.chunkZ = Math.floor(this.worldZ / 16);
 
         this.camera.position.x = x;
         this.camera.position.y = y;
@@ -75,10 +181,15 @@ class player{
         this.fY = Math.floor(this.worldY);
         this.fZ = Math.floor(this.worldZ);
 
+        this.chunkX = Math.floor(this.worldX / 16);//what chunk the player is in
+        this.chunkY = Math.floor(this.worldY / 16);
+        this.chunkZ = Math.floor(this.worldZ / 16);
+
         this.camera.position.x = this.trueX;
         this.camera.position.y = this.trueY;
         this.camera.position.z = this.trueZ;
 
+        this.updateRenderedChunks();
 
     }
 

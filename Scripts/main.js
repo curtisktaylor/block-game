@@ -35,40 +35,22 @@ plane.position.z = 5;
 plane.position.x = 5;
 
 
-function test(layer, side){
-    testChunk.markStripUsed(layer, side, 1, 0, 3);
-    testChunk.markStripUsed(layer, side, 0, 5, 5);
-    testChunk.markStripUsed(layer, side, 1, 5, 5);
-    testChunk.markStripUsed(layer, side, 2, 5, 5);
-    testChunk.markStripUsed(layer, side, 5, 6, 15);
-    testChunk.markStripUsed(layer, side, 10, 5, 5);
-    testChunk.markStripUsed(layer, side, 11, 4, 4);
-}
-
-
-let world = new chunkManager(5, 8, 5, scene);
-world.applyNoiseMap2();
-world.applyDefaultGeneration();
-world.generateTrees(0.02);
-world.generateAllGreedyMeshes();
-
-
-
-//testChunk.setRaw();
 
 let lastUpdate = Date.now();
 
-let p = new player(camera, 0, 5 * 16 * 8, 0);
-//setInterval(animate, 1000/60);
-requestAnimationFrame(animate);
-//setInterval(updateFps, 1000);
+let p = new player(scene, camera, 0, 5 * 16 * 8, 0, 20, 8, 20);
 
-//testChunk.generateGreedyMesh();
+
 
 let fps = 0;
 let now;
 let deltaTime;
 let lastSecond = Date.now();
+
+
+requestAnimationFrame(animate);
+
+
 
 function animate() {
 
@@ -78,7 +60,7 @@ function animate() {
     lastUpdate = now;
 
     //update fps counter if 1 second has passed
-    if(now - lastSecond> 1000){
+    if(now - lastSecond >= 1000){
         fpsCounter.innerHTML = "FPS: " + fps;
         fps = 0;
         lastSecond = now;
@@ -88,9 +70,11 @@ function animate() {
     fps++;
 
 
-    xCoord.innerHTML = "X: " + Math.round(camera.position.x)/5;
-    yCoord.innerHTML = "Y: " + Math.round(camera.position.y)/5;
-    zCoord.innerHTML = "Z: " + Math.round(camera.position.z)/5;
+    xCoord.innerHTML = "X: " + p.worldX.toFixed(2);
+    yCoord.innerHTML = "Y: " + p.worldY.toFixed(2);
+    zCoord.innerHTML = "Z: " + p.worldZ.toFixed(2);
+
+    currentChunk.innerHTML = "Chunk: [" + p.chunkX + ", " + p.chunkY + ", " + p.chunkZ + "]";
 
     //move player
     p.updateMove(camera, deltaTime);

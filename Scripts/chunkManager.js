@@ -135,6 +135,56 @@ class chunkManager{
         }
     }
 
+    generateGreedyMesh(x, y, z){
+        //XN, XP, YN, YP, ZN, ZP
+        let testChunk = new chunk(x, y, z, scene);
+        let s = new Array(testChunk.SIZE).fill(new Array(testChunk.HEIGHT).fill(0));
+        let XN;
+        let XP;
+        let YN;
+        let YP;
+        let ZN;
+        let ZP;
+
+        if(x > 0){
+            XP = this.map[x - 1][y][z].getXN();
+        } else{
+            XP = s;
+        }
+
+        if(x < this.WIDTH - 1){
+            XN = this.map[x + 1][y][z].getXP();
+        } else{
+            XN = s;
+        }
+
+        if(y > 0){
+            YP = this.map[x][y - 1][z].getYN();
+        } else{
+            YP = s;
+        }
+        
+        if(y < this.HEIGHT - 1){
+            YN = this.map[x][y + 1][z].getYP();
+        } else{
+            YN = s;
+        }
+
+        if(z > 0){
+            ZP = this.map[x][y][z - 1].getZN();
+        } else{
+            ZP = s;
+        }
+        
+        if(z < this.LENGTH - 1){
+            ZN = this.map[x][y][z + 1].getZP();
+        } else{
+            ZN = s;
+        }
+
+        this.map[x][y][z].visibleSides(XN, XP, YN, YP, ZN, ZP);
+        this.map[x][y][z].generateGreedyMesh();
+    }
 
     generateAllGreedyMeshes(){
         //XN, XP, YN, YP, ZN, ZP
@@ -261,6 +311,37 @@ class chunkManager{
         let chunkZ = Math.floor(z / this.CHUNK_SIZE);
 
         return this.map[chunkX][chunkY][chunkZ].list[x % this.CHUNK_SIZE][y % this.CHUNK_HEIGHT][z % this.CHUNK_SIZE];
+    }
+
+    hideChunk(chunkX, chunkY, chunkZ){
+        //if the chunk is out of bounds, do nothing
+        if(chunkX < 0 || chunkY < 0 || chunkZ < 0 || chunkX > this.map.length - 1 || chunkY > this.map[0].length - 1 || chunkZ > this.map[0][0].length - 1){
+            return;
+        }
+
+        let c = this.map[chunkX][chunkY][chunkZ];
+
+        for(let i = 0; i < c.sceneObjects.length; i++){
+            c.sceneObjects[i].visible = false;
+        }
+    }
+
+    showChunk(chunkX, chunkY, chunkZ){
+        //if the chunk is out of bounds, do nothing
+        if(chunkX < 0 || chunkY < 0 || chunkZ < 0 || chunkX > this.map.length - 1 || chunkY > this.map[0].length - 1 || chunkZ > this.map[0][0].length - 1){
+            return;
+        }
+
+        let c = this.map[chunkX][chunkY][chunkZ];
+
+        if(!c.meshGenerated){
+            this.generateGreedyMesh(chunkX, chunkY, chunkZ);
+        }
+
+        for(let i = 0; i < c.sceneObjects.length; i++){
+            c.sceneObjects[i].visible = true;
+        }
+
     }
 
 }

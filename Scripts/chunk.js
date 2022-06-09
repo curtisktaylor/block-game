@@ -12,6 +12,10 @@ class chunk{
 
         this.list = new Array(this.SIZE);//3D array storing the block types
 
+        this.sceneObjects = [];
+
+        this.meshGenerated = false;
+
         this.x = chunkX;//where this chunk is relative to other chunks
         this.y = chunkY;
         this.z = chunkZ;
@@ -428,7 +432,7 @@ class chunk{
 
             //sending all the data to three.js
             for(let j = 0; j < meshData.length; j++){
-                this.sendPlaneTest(i, meshData[j].y, meshData[j].x, meshData[j].width, meshData[j].height, meshData[j].type, 1);
+                this.sendPlane(i, meshData[j].y, meshData[j].x, meshData[j].width, meshData[j].height, meshData[j].type, 1);
             }
 
 
@@ -437,7 +441,7 @@ class chunk{
 
             //sending all the data to three.js
             for(let j = 0; j < meshData.length; j++){
-                this.sendPlaneTest(i, meshData[j].y, meshData[j].x, meshData[j].width, meshData[j].height, meshData[j].type, 3);
+                this.sendPlane(i, meshData[j].y, meshData[j].x, meshData[j].width, meshData[j].height, meshData[j].type, 3);
             }
 
 
@@ -446,7 +450,7 @@ class chunk{
 
             //sending all the data to three.js
             for(let j = 0; j < meshData.length; j++){
-                this.sendPlaneTest(meshData[j].x, i, meshData[j].y, meshData[j].width, meshData[j].height, meshData[j].type, 4);
+                this.sendPlane(meshData[j].x, i, meshData[j].y, meshData[j].width, meshData[j].height, meshData[j].type, 4);
             }
 
 
@@ -455,7 +459,7 @@ class chunk{
 
             //sending all the data to three.js
             for(let j = 0; j < meshData.length; j++){
-                this.sendPlaneTest(meshData[j].x, i, meshData[j].y, meshData[j].width, meshData[j].height, meshData[j].type, 5);
+                this.sendPlane(meshData[j].x, i, meshData[j].y, meshData[j].width, meshData[j].height, meshData[j].type, 5);
             }
 
 
@@ -464,7 +468,7 @@ class chunk{
 
             //sending all the data to three.js
             for(let j = 0; j < meshData.length; j++){
-                this.sendPlaneTest(meshData[j].x, meshData[j].y, i, meshData[j].width, meshData[j].height, meshData[j].type, 0);
+                this.sendPlane(meshData[j].x, meshData[j].y, i, meshData[j].width, meshData[j].height, meshData[j].type, 0);
             }
 
 
@@ -473,10 +477,12 @@ class chunk{
 
             //sending all the data to three.js
             for(let j = 0; j < meshData.length; j++){
-                this.sendPlaneTest(meshData[j].x, meshData[j].y, i, meshData[j].width, meshData[j].height, meshData[j].type, 2);
+                this.sendPlane(meshData[j].x, meshData[j].y, i, meshData[j].width, meshData[j].height, meshData[j].type, 2);
             }
 
         }
+
+        this.meshGenerated = true;
 
     }
 
@@ -644,7 +650,7 @@ class chunk{
     }
 
 
-    sendPlane(x, y, z, width, height, id, face, test){//sends a plane to THREE.js and attaches this.chunkID to it
+    /*sendPlane(x, y, z, width, height, id, face, test){//sends a plane to THREE.js and attaches this.chunkID to it
         let faces = blocks.list[id].faces;
         let geometry;
         let material;
@@ -663,9 +669,9 @@ class chunk{
 
         geometry = new THREE.PlaneGeometry( width * blocks.BLOCK_SIZE, height * blocks.BLOCK_SIZE );
         if(blocks.list[id].opacity === 1){
-            material = new THREE.MeshBasicMaterial( { color: faces[face].color/*, side: THREE.DoubleSide */} );
+            material = new THREE.MeshBasicMaterial( { color: faces[face].color, side: THREE.DoubleSide } );
         }else{
-            material = new THREE.MeshBasicMaterial( { color: faces[face].color, transparent: true, opacity: blocks.list[id].opacity/*, side: THREE.DoubleSide */} );
+            material = new THREE.MeshBasicMaterial( { color: faces[face].color, transparent: true, opacity: blocks.list[id].opacity, side: THREE.DoubleSide } );
         }
         if(test != null && test){
             material = new THREE.MeshBasicMaterial( { color: Math.random() * 1000, side: THREE.DoubleSide} );
@@ -686,10 +692,10 @@ class chunk{
         geometry.dispose();
         material.dispose();
         //console.log(scene.children.length);
-    }
+    }*/
 
 
-    sendPlaneTest(x, y, z, width, height, id, face){
+    sendPlane(x, y, z, width, height, id, face){
         let faces = blocks.list[id].faces;
         let geometry;
         let material;
@@ -737,9 +743,14 @@ class chunk{
         plane = new THREE.Mesh( geometry, material );
         plane.name = this.chunkID;
 
+        plane.visible = false;
+
         this.scene.add(plane);
-        geometry.dispose();
-        material.dispose();
+
+        this.sceneObjects[this.sceneObjects.length] = plane;
+
+        //geometry.dispose();
+        //material.dispose();
 
     }
 
