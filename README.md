@@ -1,4 +1,4 @@
-# minecraft4
+# block game
 
 This is a for fun project to recreate Minecraft. 
 To play, just open *page.html* in your favorite browser. 
