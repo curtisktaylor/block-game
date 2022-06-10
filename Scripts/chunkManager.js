@@ -11,6 +11,14 @@ class chunkManager{
 
         this.map = [];
 
+        //Contains Vector3 objects representing chunks waiting to be rendered
+        this.chunkLoadQueue = [];
+
+        //how many chunks can be loaded every frame
+        this.maxChunkLoad = 6;
+        //max amount of chunk meshes that can be loaded in every frame
+        this.maxObjectLoad = 200;
+
         for(let x = 0; x < this.WIDTH; x++){
             this.map[x] = new Array(this.HEIGHT);
 
@@ -135,6 +143,7 @@ class chunkManager{
         }
     }
 
+    //generates a single chunk's greedy mesh
     generateGreedyMesh(x, y, z){
         //XN, XP, YN, YP, ZN, ZP
         let testChunk = new chunk(x, y, z, scene);
@@ -315,7 +324,7 @@ class chunkManager{
 
     hideChunk(chunkX, chunkY, chunkZ){
         //if the chunk is out of bounds, do nothing
-        if(chunkX < 0 || chunkY < 0 || chunkZ < 0 || chunkX > this.map.length - 1 || chunkY > this.map[0].length - 1 || chunkZ > this.map[0][0].length - 1){
+        if(this.validChunk(chunkX, chunkY, chunkZ)){
             return;
         }
 
@@ -324,11 +333,19 @@ class chunkManager{
         for(let i = 0; i < c.sceneObjects.length; i++){
             c.sceneObjects[i].visible = false;
         }
+        
+        //check if the chunk is in the load queue and if it is, set it to be cancelled
+        for(let i = 0; i < this.chunkLoadQueue.length; i++){
+            if(this.chunkLoadQueue[i].x === chunkX && this.chunkLoadQueue[i].y === chunkY && this.chunkLoadQueue[i].z === chunkZ){
+                this.chunkLoadQueue[i].cancel = true;
+            }
+        }
+
     }
 
     showChunk(chunkX, chunkY, chunkZ){
         //if the chunk is out of bounds, do nothing
-        if(chunkX < 0 || chunkY < 0 || chunkZ < 0 || chunkX > this.map.length - 1 || chunkY > this.map[0].length - 1 || chunkZ > this.map[0][0].length - 1){
+        if(this.validChunk(chunkX, chunkY, chunkZ)){
             return;
         }
 
@@ -341,6 +358,51 @@ class chunkManager{
         for(let i = 0; i < c.sceneObjects.length; i++){
             c.sceneObjects[i].visible = true;
         }
+
+    }
+
+    validChunk(chunkX, chunkY, chunkZ){
+        if(chunkX < 0 || chunkY < 0 || chunkZ < 0 || chunkX > this.map.length - 1 || chunkY > this.map[0].length - 1 || chunkZ > this.map[0][0].length - 1){
+            return false;
+        }
+        return true;
+    }
+
+    //places a chunk in the queue for loading
+    queueChunk(x, y, z){
+        this.chunkLoadQueue[this.chunkLoadQueue.length] = new THREE.Vector3(x, y, z);
+    }
+
+
+    //load a chunk into the world from the queue every x frames
+    chunkLoadUpdate(){
+
+        let chunk;
+        let objectCount = 0;
+
+        //guarantee render this chunk, and iwhile object limit has not been reached for this frame, continue rendering
+        do{
+
+            chunk = this.chunkLoadQueue.pop();
+
+            //if there are no chunks that should be loaded, do nothing
+            if(chunk === undefined){
+                return;
+            }
+            //if the chunk is invalid
+            if(!this.validChunk(chunk.x, chunk.y, chunk.z)){
+                continue;
+            }
+            //if this chunk should be skipped
+            if(chunk.cancel){
+                continue;
+            }
+            
+            //show the chunk and count how many objects have been rendered this frame
+            this.showChunk(chunk.x, chunk.y, chunk.z);
+            objectCount += this.map[chunk.x][chunk.y][chunk.z].sceneObjects.length;
+
+        } while(objectCount < this.maxObjectLoad);
 
     }
 

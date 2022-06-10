@@ -71,19 +71,22 @@ class player{
         let newChunks = [];
 
         //figure out what chunks are now visible
+        //typically the top chunks are the laggiest to render which is why the y loop is placed oddly. It makes the chunks render as collumns rather than rows
+        //which means the laggiest chunks will not try to load at the same time
         for(let x = this.chunkX - this.renderDist; x < this.chunkX + this.renderDist + 1; x++){
-            for(let y = 0; y < this.worldSizeY; y++){
-                for(let z = this.chunkZ - this.renderDist; z < this.chunkZ + this.renderDist + 1; z++){
+            for(let z = this.chunkZ - this.renderDist; z < this.chunkZ + this.renderDist + 1; z++){
+                for(let y = 0; y < this.worldSizeY; y++){
 
                     newChunks[newChunks.length] = new THREE.Vector3(x, y, z);
                 }
             }
+            
         }
 
         if(this.visibleChunks.length === 0){
             this.visibleChunks = newChunks;
             for(let i = 0; i < newChunks.length; i++){
-                this.world.showChunk(newChunks[i].x, newChunks[i].y, newChunks[i].z);
+                this.world.queueChunk(newChunks[i].x, newChunks[i].y, newChunks[i].z);
             }
         }
 
@@ -133,8 +136,7 @@ class player{
             } 
 
             //otherwise, make the chunk visible
-            this.world.showChunk(newChunk.x, newChunk.y, newChunk.z);
-            //console.log(newChunk);
+            this.world.queueChunk(newChunk.x, newChunk.y, newChunk.z);
 
         }
 
@@ -217,6 +219,8 @@ class player{
 
         distMoved = this.move(this.speed, this.cameraX + 90, deltaTime);//gets how far player should move sideways
         this.shiftPos(distMoved.x * this.moveS, this.speed * this.moveV * deltaTime, distMoved.z * this.moveS);
+
+        this.world.chunkLoadUpdate();
         
     }
 

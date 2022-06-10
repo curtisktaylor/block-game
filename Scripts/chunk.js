@@ -756,12 +756,13 @@ class chunk{
 
 
     removeAllFromScene(){//removes this entire chunk from the scene
-        let selectedObject = this.scene.getObjectByName(this.chunkID);
 
-        while(selectedObject != null){
-            this.scene.remove(selectedObject);
-            selectedObject = this.scene.getObjectByName(this.chunkID);
+        for(let i = 0; i < this.sceneObjects.length; i++){
+            this.scene.remove(this.sceneObjects[i]);
         }
+
+        this.meshGenerated = false;
+        this.sceneObjects = [];
     }
 
 
