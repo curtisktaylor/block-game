@@ -4,6 +4,10 @@ class player{
 
         this.visibleChunks = [];
 
+        this.hitbox = new boxHitbox(3, 8, 3);
+        //we dont want the camera to be in the middle of the hitbox so we move the hitbox down a bit
+        this.hitboxYOffset = 0;
+
         this.renderDist = 3;
 
         this.camera = camera;
@@ -50,7 +54,7 @@ class player{
         this.moveV = 0;//if player is moving up/down
 
 
-        this.speed = 2;//player's speed
+        this.speed = 0.3;//player's speed
         this.sens = 3;//how fast camera rotates
 
 
@@ -214,13 +218,76 @@ class player{
 
         camera.lookAt(this.findBlock(this.trueX, this.trueY, this.trueZ, this.cameraX, this.cameraY));//sets camera rotation
 
-        let distMoved = this.move(this.speed, this.cameraX, deltaTime);//gets how far player should move forward
-        this.shiftPos(distMoved.x * this.moveF, 0, distMoved.z * this.moveF);
+        let distMovedH = this.move(this.speed, this.cameraX, deltaTime);//gets how far player should move forward
+        //this.shiftPos(distMoved.x * this.moveF, 0, distMoved.z * this.moveF);
+        distMovedH.x *= this.moveF;
+        distMovedH.z *= this.moveF;
 
-        distMoved = this.move(this.speed, this.cameraX + 90, deltaTime);//gets how far player should move sideways
-        this.shiftPos(distMoved.x * this.moveS, this.speed * this.moveV * deltaTime, distMoved.z * this.moveS);
+        let distMovedV = this.move(this.speed, this.cameraX + 90, deltaTime);//gets how far player should move sideways
+        //this.shiftPos(distMoved.x * this.moveS, this.speed * this.moveV * deltaTime, distMoved.z * this.moveS);
+        distMovedV.x *= this.moveS;
+        distMovedV.z *= this.moveS;
+
+        let distMoved = new THREE.Vector3(distMovedH.x + distMovedV.x, this.speed * this.moveV * deltaTime, distMovedH.z + distMovedV.z);
+
+        
+
 
         this.world.chunkLoadUpdate();
+
+
+        if(!this.collision(distMoved.x, 0, 0)){
+            /*console.log(this.collidingWith(this.worldX, this.worldY + this.hitboxYOffset, this.worldZ, this.worldX, this.worldY, this.worldZ, 
+                blocks.list[block.type]  ));*/
+            //console.log(this.collision(distMoved.x, distMoved.y + this.hitboxYOffset, distMoved.z));
+            this.shiftPos(distMoved.x, 0, 0);
+        } else if(this.collision(distMoved.x, 0, 0)){
+            distMoved.x /= 2;
+            while(this.collision(distMoved.x, 0, 0)){
+                distMoved.x /= 2;
+                if(distMoved.x < 0.05){
+                    break;
+                }
+            }
+            if(!this.collision(distMoved.x, 0, 0)){
+                this.shiftPos(distMoved.x, 0, 0);
+            }
+        }
+        if(!this.collision(0, distMoved.y + this.hitboxYOffset, 0)){
+            /*console.log(this.collidingWith(this.worldX, this.worldY + this.hitboxYOffset, this.worldZ, this.worldX, this.worldY, this.worldZ, 
+                blocks.list[block.type]  ));*/
+            //console.log(this.collision(distMoved.x, distMoved.y + this.hitboxYOffset, distMoved.z));
+            this.shiftPos(0, distMoved.y, 0);
+        }else if(this.collision(0, distMoved.y, 0)){
+            distMoved.y /= 2;
+            while(this.collision(0, distMoved.y, 0)){
+                distMoved.y /= 2;
+                if(distMoved.y < 0.05){
+                    break;
+                }
+            }
+            if(!this.collision(0, distMoved.y, 0)){
+                this.shiftPos(0, distMoved.y, 0);
+            }
+        }
+        if(!this.collision(0, 0, distMoved.z)){
+            /*console.log(this.collidingWith(this.worldX, this.worldY + this.hitboxYOffset, this.worldZ, this.worldX, this.worldY, this.worldZ, 
+                blocks.list[block.type]  ));*/
+            //console.log(this.collision(distMoved.x, distMoved.y + this.hitboxYOffset, distMoved.z));
+            this.shiftPos(0, 0, distMoved.z);
+        }else if(this.collision(0, 0, distMoved.z)){
+            distMoved.z /= 2;
+            while(this.collision(0, 0, distMoved.z)){
+                distMoved.z /= 2;
+                if(distMoved.z < 0.05){
+                    break;
+                }
+            }
+            if(!this.collision(0, 0, distMoved.z)){
+                this.shiftPos(0, 0, distMoved.z);
+            }
+        }
+        
         
     }
 
@@ -239,6 +306,58 @@ class player{
         let z = dist * Math.sin(m.rad(angle));
 
         return new THREE.Vector3(x * dt, 0, z * dt);
+    }
+
+    //shiftPos but with block collision
+    shiftPosCollision(x, y, z){
+        
+    }
+
+    //checks if the player is colliding with a block
+    collidingWith(x1, y1, z1, x2, y2, z2, blockReference){
+        
+        if(blockReference.collisionType === 1){
+            return(this.hitbox.collidingWith(x1, y1, z1, x2, y2, z2, blockReference.hitbox));
+        }
+
+        return false;
+        
+    }
+
+    //checks if a spot the player wants to move to will result in a collision
+    collision(cx, cy, cz){
+        let block;
+        let reference;
+        let tempX;
+        let tempY;
+        let tempZ;
+
+        for(let x = Math.min(0, cx); x < Math.max(0, cx) + 1; x++){
+            for(let y = Math.min(0, cy); y < Math.max(0, cy) + 1; y++){
+                for(let z = Math.min(0, cz); z < Math.max(0, cz) + 1; z++){
+
+                    tempX = Math.floor(Math.abs(this.worldX + x)) * Math.sign(this.worldX + x);
+                    tempY = Math.floor(Math.abs(this.worldY + y)) * Math.sign(this.worldY + y);
+                    tempZ = Math.floor(Math.abs(this.worldZ + z)) * Math.sign(this.worldZ + z);
+                    block = this.world.getBlock(tempX, tempY, tempZ);
+
+                    if(block === -1){
+                        continue;
+                    }
+
+                    reference = blocks.list[block.type];
+                        
+                    if(this.collidingWith(this.worldX + cx, this.worldY + cy, this.worldZ + cz, tempX, tempY, tempZ, reference)){
+
+                        return true;
+                    }
+
+                }
+            }
+        }
+
+        return false;
+
     }
 
 }

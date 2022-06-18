@@ -301,15 +301,14 @@ class chunkManager{
     }
 
 
-    setBlock(x, y, z, type){
-        if(x >= this.CHUNK_SIZE * this.WIDTH || y >= this.CHUNK_HEIGHT * this.HEIGHT || z >= this.CHUNK_SIZE * this.LENGTH
-            || x < 0 || y < 0 || z < 0){
-            return;
-        }
-
+    setBlock(x, y, z, type){ 
         let chunkX = Math.floor(x / this.CHUNK_SIZE);
         let chunkY = Math.floor(y / this.CHUNK_HEIGHT);
         let chunkZ = Math.floor(z / this.CHUNK_SIZE);
+
+        if(!this.validChunk(chunkX, chunkY, chunkZ)){
+            return;
+        }
 
         this.map[chunkX][chunkY][chunkZ].list[x % this.CHUNK_SIZE][y % this.CHUNK_HEIGHT][z % this.CHUNK_SIZE].type = type;
     }
@@ -319,12 +318,22 @@ class chunkManager{
         let chunkY = Math.floor(y / this.CHUNK_HEIGHT);
         let chunkZ = Math.floor(z / this.CHUNK_SIZE);
 
-        return this.map[chunkX][chunkY][chunkZ].list[x % this.CHUNK_SIZE][y % this.CHUNK_HEIGHT][z % this.CHUNK_SIZE];
+        if(!this.validChunk(chunkX, chunkY, chunkZ)){
+            return -1;
+        }
+
+        try{
+            return this.map[chunkX][chunkY][chunkZ].list[x % this.CHUNK_SIZE][y % this.CHUNK_HEIGHT][z % this.CHUNK_SIZE];
+        }catch{
+            console.log(x + " " + y + " " + z + " " + chunkX + " " + chunkY + " " + chunkZ);
+            return null;
+        }
+        
     }
 
     hideChunk(chunkX, chunkY, chunkZ){
         //if the chunk is out of bounds, do nothing
-        if(this.validChunk(chunkX, chunkY, chunkZ)){
+        if(!this.validChunk(chunkX, chunkY, chunkZ)){
             return;
         }
 
@@ -345,7 +354,7 @@ class chunkManager{
 
     showChunk(chunkX, chunkY, chunkZ){
         //if the chunk is out of bounds, do nothing
-        if(this.validChunk(chunkX, chunkY, chunkZ)){
+        if(!this.validChunk(chunkX, chunkY, chunkZ)){
             return;
         }
 
@@ -380,7 +389,7 @@ class chunkManager{
         let chunk;
         let objectCount = 0;
 
-        //guarantee render this chunk, and iwhile object limit has not been reached for this frame, continue rendering
+        //guarantee render this chunk, and while object limit has not been reached for this frame, continue rendering
         do{
 
             chunk = this.chunkLoadQueue.pop();

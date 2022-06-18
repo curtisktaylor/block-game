@@ -707,9 +707,9 @@ class chunk{
         chunkOffset = new THREE.Vector3(this.x * this.SIZE * blocks.BLOCK_SIZE, this.y * this.SIZE * blocks.BLOCK_SIZE, this.z * this.SIZE * blocks.BLOCK_SIZE);
         worldCoord = new THREE.Vector3(x * blocks.BLOCK_SIZE, y * blocks.BLOCK_SIZE, z * blocks.BLOCK_SIZE);
 
-        worldCoord.x += faces[face].x + chunkOffset.x;
-        worldCoord.y += faces[face].y + chunkOffset.y;
-        worldCoord.z += faces[face].z + chunkOffset.z;
+        worldCoord.x += faces[face].x + chunkOffset.x + 2.5;
+        worldCoord.y += faces[face].y + chunkOffset.y + 2.5;
+        worldCoord.z += faces[face].z + chunkOffset.z + 2.5;
 
         if(face === 3 || face === 1){
             worldCoord.y += ((height - 1) * blocks.BLOCK_SIZE) / 2;

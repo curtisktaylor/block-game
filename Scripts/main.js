@@ -38,8 +38,7 @@ plane.position.x = 5;
 
 let lastUpdate = Date.now();
 
-let p = new player(scene, camera, 0, 5 * 16 * 8, 0, 20, 8, 20);
-
+let p = new player(scene, camera, 0, 5 * 16 * 6, 0, 5, 8, 5);
 
 
 let fps = 0;
@@ -70,9 +69,12 @@ function animate() {
     fps++;
 
 
-    xCoord.innerHTML = "X: " + p.worldX.toFixed(2);
+    /*xCoord.innerHTML = "X: " + p.worldX.toFixed(2);
     yCoord.innerHTML = "Y: " + p.worldY.toFixed(2);
-    zCoord.innerHTML = "Z: " + p.worldZ.toFixed(2);
+    zCoord.innerHTML = "Z: " + p.worldZ.toFixed(2);*/
+    xCoord.innerHTML = "X: " + p.fX;
+    yCoord.innerHTML = "Y: " + p.fY;
+    zCoord.innerHTML = "Z: " + p.fZ;
 
     currentChunk.innerHTML = "Chunk: [" + p.chunkX + ", " + p.chunkY + ", " + p.chunkZ + "]";
 
